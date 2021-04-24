@@ -34,8 +34,6 @@
 #warning "ARDUINO_ESP8266_RELEASE_2_3_0, some WM features disabled" 
 #define WM_NOASYNC         // esp8266 no async scan wifi
 #define WM_NOCOUNTRY       // esp8266 no country
-#define WM_NOAUTH          // no httpauth
-#define WM_NOSOFTAPSSID    // no softapssid() @todo shim
 #endif
 
 // #include "soc/efuse_reg.h" // include to add efuse chip rev to info, getChipRevision() is almost always the same though, so not sure why it matters.
@@ -202,6 +200,12 @@ class WiFiManager
 
     // SET CALLBACKS
 
+    //mine
+    void setUpdateDoneCallback( std::function<void(WiFiManager*)> func );
+    void setUpdatingCallback( std::function<void(WiFiManager*)> func );
+    void setUpdateCallback( std::function<void(WiFiManager*)> func );
+    //
+
     //called after AP mode and config portal has started
     void          setAPCallback( std::function<void(WiFiManager*)> func );
 
@@ -235,9 +239,6 @@ class WiFiManager
     
     //sets timeout for which to attempt connecting on saves, useful if there are bugs in esp waitforconnectloop
     void          setSaveConnectTimeout(unsigned long seconds);
-    
-    // lets you disable automatically connecting after save from webportal
-    void          setSaveConnect(bool connect = true);
     
     // toggle debug output
     void          setDebugOutput(boolean debug);
@@ -432,7 +433,7 @@ class WiFiManager
     unsigned long _startscan              = 0; // ms for timing wifi scans
     int           _cpclosedelay           = 2000; // delay before wifisave, prevents captive portal from closing to fast.
     bool          _cleanConnect           = false; // disconnect before connect in connectwifi, increases stability on connects
-    bool          _connectonsave          = true; // connect to wifi when saving creds
+   
     bool          _disableSTA             = false; // disable sta when starting ap, always
     bool          _disableSTAConn         = true;  // disable sta when starting ap, if sta is not connected ( stability )
     bool          _channelSync            = false; // use same wifi sta channel when starting ap
@@ -513,10 +514,10 @@ class WiFiManager
     bool          startAP();
     void          setupDNSD();
 
-    uint8_t       connectWifi(String ssid, String pass, bool connect = true);
+    uint8_t       connectWifi(String ssid, String pass);
     bool          setSTAConfig();
     bool          wifiConnectDefault();
-    bool          wifiConnectNew(String ssid, String pass,bool connect = true);
+    bool          wifiConnectNew(String ssid, String pass);
 
     uint8_t       waitForConnectResult();
     uint8_t       waitForConnectResult(uint32_t timeout);
@@ -656,6 +657,11 @@ class WiFiManager
     // callbacks
     // @todo use cb list (vector) maybe event ids, allow no return value
     std::function<void(WiFiManager*)> _apcallback;
+    //*mine
+    std::function<void(WiFiManager*)> _updateDoneCallback;
+    std::function<void(WiFiManager*)> _updatingCallback;
+    std::function<void(WiFiManager*)> _updateCallback;
+    //
     std::function<void()> _webservercallback;
     std::function<void()> _savewificallback;
     std::function<void()> _presavecallback;
